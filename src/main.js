@@ -2,6 +2,9 @@ import iziToast from 'izitoast';
 import SimpleLightbox from 'simplelightbox';
 
 
+const input = document.querySelector("input");
+const form = document.querySelector(".form")
+
 const showLoader = () => {
     const loader = document.createElement('span');
     loader.classList.add('loader');
@@ -15,9 +18,9 @@ const hideLoader = () => {
 };
 
 
-const form = document.querySelector(".form").addEventListener('submit', function (e) {
+form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const searchInput = document.querySelector("input").value.trim();
+    const searchInput = input.value.trim();
 
     if (!searchInput) {
         iziToast.error({
@@ -28,26 +31,46 @@ const form = document.querySelector(".form").addEventListener('submit', function
     }
     showLoader();
 
-    const apiKey = '42337135-3774c2f446ec3f71c1b4c916a';
-    const url = `https://pixabay.com/api/?key=${apiKey}&q=${searchInput}&image_type=photo&orientation=horizontal&safesearch=true`;
-    fetch(url)
-        .then(response => response.json())
-        .then(data => handleApiResponse(data))
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            hideLoader();
-            iziToast.error({
-                title: 'Error',
-                message: 'An error occurred while fetching data. Please try again later.',
-            });
+    const config = {
+        apiKey: '42337135-3774c2f446ec3f71c1b4c916a',
+        baseUrl: 'https://pixabay.com/api/',
+    };
+
+    const url = `https://pixabay.com/api/?key=${config?.apiKey}&q=${searchInput}&image_type=photo&orientation=horizontal&safesearch=true`;
+
+
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        updateGallery(data);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        hideLoader();
+        iziToast.error({
+            title: 'Error',
+            message: 'An error occurred while fetching data. Please try again later.',
+            position: 'center',
         });
+    }
 });
 
 function handleApiResponse(response) {
     hideLoader();
 
-    const galleryContainer = document.querySelector(".gallery");
-    galleryContainer.innerHTML = '';
+
+    if (!response || !response.hits) {
+        iziToast.error({
+            title: 'Error',
+            message: 'Invalid response format. Please try again later.',
+            position: 'center',
+        });
+        return;
+    }
 
     if (response.hits.length === 0) {
         iziToast.info({
@@ -59,6 +82,15 @@ function handleApiResponse(response) {
         return;
     }
 
+
+    updateGallery(response);
+}
+
+
+function updateGallery(data) {
+    const galleryContainer = document.querySelector(".gallery");
+    galleryContainer.innerHTML = '';
+
     const lightbox = new SimpleLightbox('.gallery a', {
         captions: true,
         captionType: 'attr',
@@ -69,7 +101,7 @@ function handleApiResponse(response) {
         captionDelay: 250,
     });
 
-    const markup = response.hits.map(data => `
+    const markup = data.hits.map(data => `
         <li class="gallery-item">
             <a href="${data.largeImageURL}">
                 <img class="gallery-image" src="${data.webformatURL}" alt="${data.tags}">
@@ -80,7 +112,6 @@ function handleApiResponse(response) {
             <p><b>Downloads: </b>${data.downloads}</p>
         </li>`).join('');
 
-    galleryContainer.insertAdjacentHTML('beforeend', markup);
-
-    lightbox.on('show.simplelightbox').refresh();
+    galleryContainer.innerHTML = markup;
+    lightbox.refresh();
 }

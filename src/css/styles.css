@@ -82,7 +82,7 @@ input::placeholder {
 .gallery {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px 24px;
+  gap: 24px;
   margin: 32px auto 0;
   justify-content: center;
 }
@@ -92,6 +92,7 @@ input::placeholder {
   transition: transform 0.3s ease-in-out;
   border-radius: 4px;
   border: 1px solid #000;
+  box-sizing: border-box;
 }
 
 .gallery-item:hover {
@@ -122,10 +123,6 @@ input::placeholder {
   position: relative;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .loader::after,
