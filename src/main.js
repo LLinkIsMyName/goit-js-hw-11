@@ -114,4 +114,7 @@ function updateGallery(data) {
 
     galleryContainer.innerHTML = markup;
     lightbox.refresh();
+
+    // Hide the loader after updating the gallery
+    hideLoader();
 }
